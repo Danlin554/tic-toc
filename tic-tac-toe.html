@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(rgba(255, 229, 236, 0.7), rgba(255, 196, 214, 0.7)),
+                        url('https://4kwallpapers.com/images/wallpapers/chiikawa-usagi-1920x1080-15895.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            top: 10%;
+            left: 15%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 192, 214, 0.3);
+            bottom: 15%;
+            right: 20%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(255, 182, 193, 0.4);
+            position: relative;
+            z-index: 1;
+            border: 3px solid rgba(255, 192, 214, 0.5);
+        }
+
+        h1 {
+            color: #FF9EC5;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(255, 192, 214, 0.3);
+        }
+
+        .status {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #555;
+            min-height: 40px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-template-rows: repeat(3, 120px);
+            gap: 10px;
+            margin: 0 auto 30px;
+            width: fit-content;
+        }
+
+        .cell {
+            background: linear-gradient(135deg, #FFF5F8 0%, #FFE9F0 100%);
+            border: 3px solid #FFC4D6;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 15px;
+            color: #333;
+        }
+
+        .cell:hover:not(.taken) {
+            background: linear-gradient(135deg, #FFE9F0 0%, #FFD6E4 100%);
+            transform: scale(1.05);
+            border-color: #FF9EC5;
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+        }
+
+        .cell.x {
+            color: #FF9EC5;
+        }
+
+        .cell.o {
+            color: #8DC6FF;
+        }
+
+        .cell.winner {
+            background: linear-gradient(135deg, #FFEB99 0%, #FFD6A5 100%);
+            animation: pulse 0.5s ease-in-out;
+            border-color: #FFB347;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #FF9EC5 0%, #FFB8D1 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 158, 197, 0.4);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(255, 158, 197, 0.5);
+            background: linear-gradient(135deg, #FFB8D1 0%, #FF9EC5 100%);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .score {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #FFF5F8 0%, #FFE9F0 100%);
+            border-radius: 15px;
+            border: 2px solid #FFC4D6;
+        }
+
+        .score span {
+            font-weight: bold;
+            color: #FF9EC5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>井字遊戲</h1>
+
+        <div class="score-board">
+            <div class="score">X: <span id="scoreX">0</span></div>
+            <div class="score">平手: <span id="scoreDraw">0</span></div>
+            <div class="score">O: <span id="scoreO">0</span></div>
+        </div>
+
+        <div class="status" id="status">玩家 X 的回合</div>
+
+        <div class="board" id="board">
+            <button class="cell" data-index="0"></button>
+            <button class="cell" data-index="1"></button>
+            <button class="cell" data-index="2"></button>
+            <button class="cell" data-index="3"></button>
+            <button class="cell" data-index="4"></button>
+            <button class="cell" data-index="5"></button>
+            <button class="cell" data-index="6"></button>
+            <button class="cell" data-index="7"></button>
+            <button class="cell" data-index="8"></button>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">重新開始</button>
+    </div>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        const resetBtn = document.getElementById('resetBtn');
+        const scoreX = document.getElementById('scoreX');
+        const scoreO = document.getElementById('scoreO');
+        const scoreDraw = document.getElementById('scoreDraw');
+
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let gameState = ['', '', '', '', '', '', '', '', ''];
+        let scores = { X: 0, O: 0, draw: 0 };
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function handleCellClick(e) {
+            const clickedCell = e.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            if (gameState[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add('taken', currentPlayer.toLowerCase());
+
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            let winningCombination = null;
+
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] === '' || gameState[b] === '' || gameState[c] === '') {
+                    continue;
+                }
+                if (gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
+                    roundWon = true;
+                    winningCombination = [a, b, c];
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                status.textContent = `玩家 ${currentPlayer} 獲勝！`;
+                gameActive = false;
+                scores[currentPlayer]++;
+                updateScoreboard();
+                highlightWinningCells(winningCombination);
+                return;
+            }
+
+            const roundDraw = !gameState.includes('');
+            if (roundDraw) {
+                status.textContent = '平手！';
+                gameActive = false;
+                scores.draw++;
+                updateScoreboard();
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            status.textContent = `玩家 ${currentPlayer} 的回合`;
+        }
+
+        function highlightWinningCells(combination) {
+            combination.forEach(index => {
+                cells[index].classList.add('winner');
+            });
+        }
+
+        function updateScoreboard() {
+            scoreX.textContent = scores.X;
+            scoreO.textContent = scores.O;
+            scoreDraw.textContent = scores.draw;
+        }
+
+        function resetGame() {
+            currentPlayer = 'X';
+            gameActive = true;
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            status.textContent = `玩家 ${currentPlayer} 的回合`;
+
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('taken', 'x', 'o', 'winner');
+            });
+        }
+
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetBtn.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
